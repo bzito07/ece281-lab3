@@ -57,25 +57,125 @@ end thunderbird_fsm_tb;
 architecture test_bench of thunderbird_fsm_tb is 
 	
 	component thunderbird_fsm is 
---	  port(
-		
---	  );
+	  port(
+        i_clk, i_reset  : in    std_logic;
+        i_left, i_right : in    std_logic;
+        o_lights_L      : out   std_logic_vector(2 downto 0);
+        o_lights_R      : out   std_logic_vector(2 downto 0)
+
+	  );
 	end component thunderbird_fsm;
 
 	-- test I/O signals
+	-- inputs
+	signal w_clk      :   std_logic := '0';
+	signal w_reset    :   std_logic := '0';
+	signal w_left     :   std_logic := '0';
+	signal w_right    :   std_logic := '0';
+	
+	-- outputs
+	signal w_lights   :   std_logic_vector(5 downto 0) := "000000";  -- initialize at OFF
 	
 	-- constants
-	
+	constant k_clk_period : time := 10 ns;
+
 	
 begin
 	-- PORT MAPS ----------------------------------------
-	
+   uut: thunderbird_fsm port map (
+          i_clk => w_clk,
+          i_reset => w_reset,
+          i_left => w_left,
+          i_right => w_right,
+          o_lights_L(0) => w_lights(3),
+          o_lights_L(1) => w_lights(4),
+          o_lights_L(2) => w_lights(5),
+          o_lights_R(0) => w_lights(0),
+          o_lights_R(1) => w_lights(1),
+          o_lights_R(2) => w_lights(2)
+        );
 	-----------------------------------------------------
 	
 	-- PROCESSES ----------------------------------------	
     -- Clock process ------------------------------------
-    
+	clk_proc : process
+	begin
+		w_clk <= '0';
+        wait for k_clk_period/2;
+		w_clk <= '1';
+		wait for k_clk_period/2;
+	end process;
 	-----------------------------------------------------
+	
+	sim_proc: process
+	begin
+		-- sequential timing		
+		w_reset <= '1';
+		wait for k_clk_period*1;
+		  assert w_lights = "000000" report "bad reset" severity failure;
+		
+		w_reset <= '0';
+		wait for k_clk_period*1;
+		
+		
+        -- testing if left switch is on and right is off. should cycle through each and back to OFF    
+
+        w_left <= '1'; w_right <= '0';
+        wait for k_clk_period;
+            assert w_lights = "001000" report "error on L1" severity failure;
+        wait for k_clk_period;
+            assert w_lights = "011000" report "error on L2" severity failure;
+        wait for k_clk_period;
+            assert w_lights = "111000" report "error on L3" severity failure;
+        wait for k_clk_period;
+            assert w_lights = "000000" report "error on OFF" severity failure;
+            
+        -- testing if right switch is on and left is off. should cycle through each and back to OFF    
+        w_left <= '0'; w_right <= '1';
+        wait for k_clk_period;
+            assert w_lights = "000001" report "error on R1" severity failure;
+        wait for k_clk_period;
+            assert w_lights = "000011" report "error on R2" severity failure;
+        wait for k_clk_period;
+            assert w_lights = "000111" report "error on R3" severity failure;
+        wait for k_clk_period;
+            assert w_lights = "000000" report "error on OFF" severity failure;
+       
+        -- reset to OFF even if all lights are flashing
+        w_reset <= '1'; w_left <= '1'; w_right <= '1';
+            wait for k_clk_period;
+        w_reset <= '0';
+          assert w_lights = "000000" report "bad reset" severity failure;
+        wait for k_clk_period;
+            assert w_lights = "111111" report "did not go back to ON" severity failure;
+        wait for k_clk_period;    
+          assert w_lights = "000000" report "bad reset" severity failure;
+        wait for k_clk_period;
+            assert w_lights = "111111" report "did not go back to ON" severity failure;
+        wait for k_clk_period;
+          assert w_lights = "000000" report "bad reset" severity failure;
+        wait for k_clk_period;
+            assert w_lights = "111111" report "did not go back to ON" severity failure;
+        wait for k_clk_period;
+            assert w_lights = "000000" report "bad reset" severity failure;
+
+--         reset to OFF even if in middle of sequence --
+        w_left <= '0'; w_right <= '1';
+        wait for k_clk_period;
+            assert w_lights = "000001" report "error on R1" severity failure;
+        wait for k_clk_period;
+            assert w_lights = "000011" report "error on R2" severity failure;
+            wait for k_clk_period;
+        w_reset <= '1';
+            wait for k_clk_period;
+          assert w_lights = "000000" report "bad reset" severity failure;
+
+--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
+	
+		wait;
+	end process;
+
 	
 	-- Test Plan Process --------------------------------
 	
