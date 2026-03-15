@@ -8,3 +8,6 @@ Built for Vivado 2024.2 on Windows 11.
 
 ![Waveform from thunderbird_fsm_tb](lab3_tb_waveform.png)
 ![Waveform from thunderbird_fsm_tb](lab3_topbasys3_entity_sketch.png)
+
+# Sharepoint Link to Lab 3 Report
+https://usafa0-my.sharepoint.com/:w:/g/personal/c28benedict_zito_afacademy_af_edu/IQBEBTGLcwAVTaOH3dAsEMF-AXRWeJ6-p5vG1h9HFHHmp7g?e=WUsVQs
